@@ -30,7 +30,8 @@ def get_db_connection():
         password=st.secrets["DB_PASSWORD"],
         database=st.secrets["DB_NAME"],
         port=int(st.secrets["DB_PORT"]),
-        ssl_verify_cert=True
+        ssl_disabled=False,
+        ssl_verify_cert=False
     )
     cursor = conn.cursor()
     cursor.execute("USE justicia_paz_db;")
