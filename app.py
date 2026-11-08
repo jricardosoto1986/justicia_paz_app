@@ -476,11 +476,9 @@ with menu[2]:
     else:
         st.write(f"Total de expedientes en el sistema: **{len(expedientes)}**")
         
-        # Buscador rápido o filtro por estado
         filtro_estado = st.selectbox("Filtrar expedientes por estatus:", ["Todos", "Pendiente", "En Mediación", "Conciliado", "Remitido", "Citado"])
         
         for exp in expedientes:
-            # Extracción segura de campos usando .get() para evitar cualquier KeyError
             exp_id = exp.get('id') or exp.get('ID') or 'S/N'
             solicitante = exp.get('solicitante') or exp.get('nombre_solicitante') or exp.get('nombres_solicitante') or 'No especificado'
             solicitado = exp.get('solicitado') or exp.get('nombre_solicitado') or exp.get('nombres_solicitado') or 'No especificado'
@@ -492,7 +490,6 @@ with menu[2]:
             if filtro_estado != "Todos" and estado != filtro_estado:
                 continue
                 
-            # Color distintivo según el estado
             badge_color = "orange" if estado == "Pendiente" else "blue" if estado in ["En Mediación", "Citado"] else "green"
             
             with st.expander(f"📁 Expediente #{exp_id} - Solicitante: {solicitante} vs {solicitado} [{estado}]"):
@@ -523,7 +520,7 @@ with menu[2]:
                     )
                 
                 with col_st2:
-                    st.write("") # Espaciado vertical
+                    st.write("")
                     st.write("")
                     if st.button("💾 Guardar Estatus", key=f"btn_st_{exp_id}", use_container_width=True):
                         try:
@@ -539,12 +536,12 @@ with menu[2]:
                             st.rerun()
                         except Exception as e:
                             st.error(f"Error al actualizar el estatus: {e}")
-st.markdown("---")
+
+                st.markdown("---")
                 st.markdown("#### 📄 Generación y Descarga de Documentos del Expediente")
                 
                 col_doc1, col_doc2, col_doc3 = st.columns(3)
                 with col_doc1:
-                    # Aquí puedes enlazar tu función de generación de PDF para el Auto de Inicio
                     st.download_button(
                         label="📥 Descargar Auto de Inicio",
                         data=f"Expediente #{exp_id}\nSolicitante: {solicitante}\nSolicitado: {solicitado}\nMotivo: {motivo}",
