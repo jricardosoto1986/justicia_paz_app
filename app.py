@@ -71,69 +71,75 @@ def limpiar_texto(texto):
     texto = str(texto).replace("•", "*").replace("°", ".").replace("º", ".")
     return texto.encode("latin-1", "replace").decode("latin-1")
 
-# --- Generador de PDF Auto de Inicio ---
+# --- Generador de PDF Auto de Inicio (Con los 3 Logos y Márgenes Legales) ---
 def generar_pdf_auto_inicio(num_expediente, solicitante_nombre, solicitante_cedula, solicitante_tel, solicitante_dir, 
                             requerido_nombre, requerido_dir, materia, hechos, pretension):
-    pdf = FPDF()
+    pdf = FPDF(orientation='P', unit='mm', format='Letter')
+    pdf.set_margins(20, 20, 20) # Márgenes legales estándar en Venezuela (Izquierda 20mm, Superior 20mm, Derecha 20mm)
     pdf.add_page()
     
+    # Distribución simétrica de los 3 logos en el encabezado oficial
+    # Izquierda: TSJ | Centro: Coordinación Nacional | Derecha: Paz Comunal
     if os.path.exists("assets/logo_tsj.png"):
-        pdf.image("assets/logo_tsj.png", x=10, y=8, w=30)
+        pdf.image("assets/logo_tsj.png", x=20, y=10, w=22)
+    if os.path.exists("assets/logo_coordinacion_nacional.png"):
+        pdf.image("assets/logo_coordinacion_nacional.png", x=96, y=10, w=22)
     if os.path.exists("assets/logo_paz_comunal.png"):
-        pdf.image("assets/logo_paz_comunal.png", x=175, y=8, w=30)
+        pdf.image("assets/logo_paz_comunal.png", x=172, y=10, w=22)
 
-    pdf.set_font("Arial", "B", 10)
-    pdf.cell(0, 5, limpiar_texto("REPÚBLICA BOLIVARIANA DE VENEZUELA"), 0, 1, "C")
-    pdf.cell(0, 5, limpiar_texto("JURISDICCIÓN ESPECIAL DE LA JUSTICIA DE PAZ COMUNAL"), 0, 1, "C")
-    pdf.cell(0, 5, limpiar_texto("CIRCUITO COMUNAL SANTA LAGUNA DEL VALLE DE LOS LAURELES"), 0, 1, "C")
-    pdf.cell(0, 5, limpiar_texto("SAN JUAN DE LOS MORROS - ESTADO GUÁRICO"), 0, 1, "C")
-    pdf.ln(6)
+    pdf.ln(12) # Espacio para los logos
+    pdf.set_font("Arial", "B", 9)
+    pdf.cell(0, 4, limpiar_texto("REPÚBLICA BOLIVARIANA DE VENEZUELA"), 0, 1, "C")
+    pdf.cell(0, 4, limpiar_texto("JURISDICCIÓN ESPECIAL DE LA JUSTICIA DE PAZ COMUNAL"), 0, 1, "C")
+    pdf.cell(0, 4, limpiar_texto("CIRCUITO COMUNAL SANTA LAGUNA DEL VALLE DE LOS LAURELES"), 0, 1, "C")
+    pdf.cell(0, 4, limpiar_texto("SAN JUAN DE LOS MORROS - ESTADO GUÁRICO"), 0, 1, "C")
+    pdf.ln(5)
     
-    pdf.set_font("Arial", "B", 11)
-    pdf.cell(0, 6, limpiar_texto("AUTO DE INICIO DE PROCEDIMIENTO Y FIJACIÓN DE AUDIENCIA INICIAL"), 0, 1, "C")
+    pdf.set_font("Arial", "B", 10)
+    pdf.cell(0, 5, limpiar_texto("AUTO DE INICIO DE PROCEDIMIENTO Y FIJACIÓN DE AUDIENCIA INICIAL"), 0, 1, "C")
     pdf.set_font("Arial", "", 9)
     
     fecha_hoy = datetime.now().strftime("%d/%m/%Y")
-    pdf.cell(0, 5, limpiar_texto(f"Lugar y Fecha: San Juan de los Morros, {fecha_hoy}"), 0, 1, "R")
+    pdf.cell(0, 5, limpiar_texto(f"San Juan de los Morros, {fecha_hoy}"), 0, 1, "R")
     pdf.cell(0, 5, limpiar_texto(f"EXPEDIENTE N°: {num_expediente}"), 0, 1, "R")
-    pdf.ln(4)
+    pdf.ln(3)
     
-    pdf.set_font("Arial", "B", 10)
-    pdf.cell(0, 6, limpiar_texto("1. IDENTIFICACIÓN DE LAS PARTES Y DATOS DE NOTIFICACIÓN:"), 0, 1, "L")
-    pdf.set_font("Arial", "", 10)
+    pdf.set_font("Arial", "B", 9)
+    pdf.cell(0, 5, limpiar_texto("1. IDENTIFICACIÓN DE LAS PARTES Y DATOS DE NOTIFICACIÓN:"), 0, 1, "L")
+    pdf.set_font("Arial", "", 9)
     
     sol_info = (
-        f"* PARTE SOLICITANTE: {solicitante_nombre}, C.I. N° {solicitante_cedula}.\n"
+        f"• PARTE SOLICITANTE: {solicitante_nombre}, C.I. N° {solicitante_cedula}.\n"
         f"  - Teléfono: {solicitante_tel if solicitante_tel else 'No registrado'}\n"
         f"  - Domicilio: {solicitante_dir}"
     )
-    pdf.multi_cell(0, 5, limpiar_texto(sol_info))
-    pdf.ln(2)
+    pdf.multi_cell(0, 4, limpiar_texto(sol_info))
+    pdf.ln(1)
     
     req_info = (
-        f"* PARTE REQUERIDA (CITADO): {requerido_nombre}.\n"
+        f"• PARTE REQUERIDA (CITADO): {requerido_nombre}.\n"
         f"  - Domicilio / Ubicación para citación: {requerido_dir}"
     )
-    pdf.multi_cell(0, 5, limpiar_texto(req_info))
-    pdf.ln(3)
+    pdf.multi_cell(0, 4, limpiar_texto(req_info))
+    pdf.ln(2)
     
-    pdf.set_font("Arial", "B", 10)
-    pdf.cell(0, 6, limpiar_texto(f"2. MATERIA DEL CONFLICTO: {materia.upper()}"), 0, 1, "L")
-    pdf.cell(0, 6, limpiar_texto("3. DESCRIPCIÓN DETALLADA DE LOS HECHOS:"), 0, 1, "L")
-    pdf.set_font("Arial", "", 10)
-    pdf.multi_cell(0, 5, limpiar_texto(hechos if hechos else "No especificado."))
-    pdf.ln(3)
+    pdf.set_font("Arial", "B", 9)
+    pdf.cell(0, 5, limpiar_texto(f"2. MATERIA DEL CONFLICTO: {materia.upper()}"), 0, 1, "L")
+    pdf.cell(0, 5, limpiar_texto("3. DESCRIPCIÓN DETALLADA DE LOS HECHOS:"), 0, 1, "L")
+    pdf.set_font("Arial", "", 9)
+    pdf.multi_cell(0, 4, limpiar_texto(hechos if hechos else "No especificado."))
+    pdf.ln(2)
     
     if pretension:
-        pdf.set_font("Arial", "B", 10)
-        pdf.cell(0, 6, limpiar_texto("4. PRETENSIÓN / PROPUESTA DE ARREGLO:"), 0, 1, "L")
-        pdf.set_font("Arial", "", 10)
-        pdf.multi_cell(0, 5, limpiar_texto(pretension))
-        pdf.ln(3)
+        pdf.set_font("Arial", "B", 9)
+        pdf.cell(0, 5, limpiar_texto("4. PRETENSIÓN / PROPUESTA DE ARREGLO:"), 0, 1, "L")
+        pdf.set_font("Arial", "", 9)
+        pdf.multi_cell(0, 4, limpiar_texto(pretension))
+        pdf.ln(2)
         
-    pdf.set_font("Arial", "B", 10)
-    pdf.cell(0, 6, limpiar_texto("5. ORDEN DE SUSTANCIACIÓN Y FIJACIÓN DE AUDIENCIA INICIAL:"), 0, 1, "L")
-    pdf.set_font("Arial", "", 10)
+    pdf.set_font("Arial", "B", 9)
+    pdf.cell(0, 5, limpiar_texto("5. ORDEN DE SUSTANCIACIÓN Y FIJACIÓN DE AUDIENCIA INICIAL:"), 0, 1, "L")
+    pdf.set_font("Arial", "", 9)
     
     orden_texto = (
         "Vista la solicitud presentada, este Despacho de Paz Comunal ADMITE la presente causa "
@@ -141,46 +147,51 @@ def generar_pdf_auto_inicio(num_expediente, solicitante_nombre, solicitante_cedu
         "se FIJA la celebración de la AUDIENCIA INICIAL DE CONCILIACIÓN dentro de los ocho (8) días "
         "hábiles siguientes en la Sede de la Oficina de Justicia de Paz Comunal."
     )
-    pdf.multi_cell(0, 5, limpiar_texto(orden_texto))
-    pdf.ln(16)
+    pdf.multi_cell(0, 4, limpiar_texto(orden_texto))
+    pdf.ln(12)
     
-    col_width = 90
-    pdf.cell(col_width, 5, "_______________________________________", 0, 0, "C")
-    pdf.cell(col_width, 5, "_______________________________________", 0, 1, "C")
-    pdf.cell(col_width, 5, limpiar_texto(solicitante_nombre), 0, 0, "C")
-    pdf.cell(col_width, 5, limpiar_texto("Juez(a) de Paz Comunal"), 0, 1, "C")
-    pdf.cell(col_width, 5, limpiar_texto("Firma del Solicitante"), 0, 0, "C")
-    pdf.cell(col_width, 5, limpiar_texto("Firma y Sello del Despacho"), 0, 1, "C")
+    # Firmas con margen respetado (Ancho total útil = 176mm aprox)
+    col_width = 85
+    pdf.cell(col_width, 4, "_______________________________________", 0, 0, "C")
+    pdf.cell(col_width, 4, "_______________________________________", 0, 1, "C")
+    pdf.cell(col_width, 4, limpiar_texto(solicitante_nombre), 0, 0, "C")
+    pdf.cell(col_width, 4, limpiar_texto("Juez(a) de Paz Comunal"), 0, 1, "C")
+    pdf.cell(col_width, 4, limpiar_texto("Firma del Solicitante"), 0, 0, "C")
+    pdf.cell(col_width, 4, limpiar_texto("Firma y Sello del Despacho"), 0, 1, "C")
     
     return bytes(pdf.output())
 
-# --- Generador de Boleta de Citación ---
+# --- Generador de Boleta de Citación (Con los 3 Logos y Márgenes Legales) ---
 def generar_boleta_citacion(num_expediente, requerido_nombre, requerido_dir, solicitante_nombre):
-    pdf = FPDF()
+    pdf = FPDF(orientation='P', unit='mm', format='Letter')
+    pdf.set_margins(20, 20, 20)
     pdf.add_page()
     
     if os.path.exists("assets/logo_tsj.png"):
-        pdf.image("assets/logo_tsj.png", x=10, y=8, w=22)
+        pdf.image("assets/logo_tsj.png", x=20, y=10, w=22)
+    if os.path.exists("assets/logo_coordinacion_nacional.png"):
+        pdf.image("assets/logo_coordinacion_nacional.png", x=96, y=10, w=22)
     if os.path.exists("assets/logo_paz_comunal.png"):
-        pdf.image("assets/logo_paz_comunal.png", x=175, y=8, w=22)
+        pdf.image("assets/logo_paz_comunal.png", x=172, y=10, w=22)
 
-    pdf.set_font("Arial", "B", 10)
-    pdf.cell(0, 5, limpiar_texto("REPÚBLICA BOLIVARIANA DE VENEZUELA"), 0, 1, "C")
-    pdf.cell(0, 5, limpiar_texto("JURISDICCIÓN ESPECIAL DE LA JUSTICIA DE PAZ COMUNAL"), 0, 1, "C")
-    pdf.cell(0, 5, limpiar_texto("CIRCUITO COMUNAL SANTA LAGUNA DEL VALLE DE LOS LAURELES"), 0, 1, "C")
-    pdf.cell(0, 5, limpiar_texto("SAN JUAN DE LOS MORROS - ESTADO GUÁRICO"), 0, 1, "C")
-    pdf.ln(8)
-    
-    pdf.set_font("Arial", "B", 13)
-    pdf.cell(0, 7, limpiar_texto("BOLETA DE CITACIÓN FORMAL"), 0, 1, "C")
-    pdf.set_font("Arial", "", 10)
-    
-    fecha_emision = datetime.now().strftime("%d/%m/%Y")
-    pdf.cell(0, 5, limpiar_texto(f"Lugar y Fecha de Emisión: San Juan de los Morros, {fecha_emision}"), 0, 1, "R")
-    pdf.cell(0, 5, limpiar_texto(f"EXPEDIENTE N°: {num_expediente}"), 0, 1, "R")
+    pdf.ln(12)
+    pdf.set_font("Arial", "B", 9)
+    pdf.cell(0, 4, limpiar_texto("REPÚBLICA BOLIVARIANA DE VENEZUELA"), 0, 1, "C")
+    pdf.cell(0, 4, limpiar_texto("JURISDICCIÓN ESPECIAL DE LA JUSTICIA DE PAZ COMUNAL"), 0, 1, "C")
+    pdf.cell(0, 4, limpiar_texto("CIRCUITO COMUNAL SANTA LAGUNA DEL VALLE DE LOS LAURELES"), 0, 1, "C")
+    pdf.cell(0, 4, limpiar_texto("SAN JUAN DE LOS MORROS - ESTADO GUÁRICO"), 0, 1, "C")
     pdf.ln(6)
     
-    pdf.set_font("Arial", "", 10)
+    pdf.set_font("Arial", "B", 11)
+    pdf.cell(0, 6, limpiar_texto("BOLETA DE CITACIÓN FORMAL"), 0, 1, "C")
+    pdf.set_font("Arial", "", 9)
+    
+    fecha_emision = datetime.now().strftime("%d/%m/%Y")
+    pdf.cell(0, 5, limpiar_texto(f"San Juan de los Morros, {fecha_emision}"), 0, 1, "R")
+    pdf.cell(0, 5, limpiar_texto(f"EXPEDIENTE N°: {num_expediente}"), 0, 1, "R")
+    pdf.ln(4)
+    
+    pdf.set_font("Arial", "", 9)
     texto_citacion = (
         f"CIUDADANO(A): {requerido_nombre}\n"
         f"DOMICILIO / UBICACIÓN: {requerido_dir}\n\n"
@@ -194,16 +205,16 @@ def generar_boleta_citacion(num_expediente, requerido_nombre, requerido_dir, sol
         f"Se le exhorta a acudir de manera puntual con su Cédula de Identidad laminada. "
         f"La incomparecencia injustificada dará lugar a las medidas previstas en la Ley Orgánica de la Jurisdicción Especial de la Justicia de Paz Comunal."
     )
-    pdf.multi_cell(0, 6, limpiar_texto(texto_citacion))
-    pdf.ln(25)
+    pdf.multi_cell(0, 5, limpiar_texto(texto_citacion))
+    pdf.ln(18)
     
-    col_width = 90
-    pdf.cell(col_width, 5, "_______________________________________", 0, 0, "C")
-    pdf.cell(col_width, 5, "_______________________________________", 0, 1, "C")
-    pdf.cell(col_width, 5, limpiar_texto("Juez(a) de Paz Comunal"), 0, 0, "C")
-    pdf.cell(col_width, 5, limpiar_texto("Firma / Huella de Recepción del Citado"), 0, 1, "C")
-    pdf.cell(col_width, 5, limpiar_texto("Firma y Sello del Despacho"), 0, 0, "C")
-    pdf.cell(col_width, 5, limpiar_texto("Fecha de Notificación: ___/___/202_"), 0, 1, "C")
+    col_width = 85
+    pdf.cell(col_width, 4, "_______________________________________", 0, 0, "C")
+    pdf.cell(col_width, 4, "_______________________________________", 0, 1, "C")
+    pdf.cell(col_width, 4, limpiar_texto("Juez(a) de Paz Comunal"), 0, 0, "C")
+    pdf.cell(col_width, 4, limpiar_texto("Firma / Huella de Recepción del Citado"), 0, 1, "C")
+    pdf.cell(col_width, 4, limpiar_texto("Firma y Sello del Despacho"), 0, 0, "C")
+    pdf.cell(col_width, 4, limpiar_texto("Fecha de Notificación: ___/___/202_"), 0, 1, "C")
     
     return bytes(pdf.output())
 
@@ -227,21 +238,25 @@ def guardar_o_buscar_persona(cursor, nac, cedula, nombres, apellidos, telf, dire
 col1, col2, col3 = st.columns([1, 3, 1])
 
 with col2:
-    # 1. Los logos arriba (puedes mostrar ambos si existen en tu carpeta assets)
-    sub_col1, sub_col2 = st.columns(2)
-    with sub_col1:
+    # 3 Logos institucionales arriba en la interfaz web
+    sub_c1, sub_c2, sub_c3 = st.columns(3)
+    with sub_c1:
         if os.path.exists("assets/logo_tsj.png"):
-            st.image("assets/logo_tsj.png", width=110)
-    with sub_col2:
+            st.image("assets/logo_tsj.png", width=75)
+    with sub_c2:
         if os.path.exists("assets/logo_coordinacion_nacional.png"):
-            st.image("assets/logo_coordinacion_nacional.png", width=110)
+            st.image("assets/logo_coordinacion_nacional.png", width=75)
+    with sub_c3:
+        if os.path.exists("assets/logo_paz_comunal.png"):
+            st.image("assets/logo_paz_comunal.png", width=75)
             
     st.markdown("---")
     
-    # 2. Los títulos institucionales abajo (centrados)
+    # Títulos institucionales centrados abajo
     st.markdown("<h5 style='text-align: center; color: #555; margin-bottom: 0px;'>República Bolivariana de Venezuela</h5>", unsafe_allow_html=True)
     st.markdown("<h5 style='text-align: center; color: #555; margin-bottom: 0px;'>Circuito Comunal Santa Laguna del Valle de los Laureles</h5>", unsafe_allow_html=True)
-    st.markdown("<h3 style='text-align: center; font-weight: bold; margin-top: 5px;'>⚖️ Sistema de Gestión - Justicia de Paz Comunal</h3>", unsafe_allow_html=True)
+    st.markdown("<h3 style='text-align: center; font-weight: bold; margin-top: 5px;'>Sistema de Gestión - Justicia de Paz Comunal</h3>", unsafe_allow_html=True)
+
 st.markdown("---")
 
 if 'usuario_logueado' not in st.session_state:
@@ -270,7 +285,12 @@ with st.sidebar:
             st.rerun()
 
 # ==================== PESTAÑAS PRINCIPALES ====================
-menu = st.tabs(["📝 Registrar Solicitud", "🔍 Consultar Mis Expedientes", "👨‍⚖️ Módulo del Juez de Paz"])
+menu = st.tabs([
+    "📝 Registrar Solicitud", 
+    "🔍 Consultar Mis Expedientes", 
+    "👨‍⚖️ Módulo del Juez de Paz",
+    "📚 Marco Legal y Competencias"
+])
 
 # TAB 1: REGISTRAR SOLICITUD
 with menu[0]:
@@ -351,7 +371,6 @@ with menu[0]:
                     id_sol = guardar_o_buscar_persona(cursor, nac_sol, ced_sol, nom_sol, ape_sol, tel_sol, dir_sol, cc_sol)
                     id_req = guardar_o_buscar_persona(cursor, "V", f"SD-{datetime.now().microsecond}", nom_req, ape_req, "", dir_req, "")
                     
-                    # Registrar o actualizar usuario ciudadano
                     registrar_o_actualizar_usuario(cursor, ced_sol, f"{nom_sol} {ape_sol}", pass_ciudadano)
                     
                     anio = datetime.now().year
@@ -547,3 +566,32 @@ with menu[2]:
 
         except Exception as e:
             st.error(f"Error cargando módulo de juez: {e}")
+
+# TAB 4: MARCO LEGAL Y COMPETENCIAS
+with menu[3]:
+    st.subheader("📚 Marco Legal, Institucional y Competencias")
+    
+    st.markdown("### 👨‍⚖️ Competencias del Juez de Paz Comunal")
+    st.write("""
+    De acuerdo con la **Ley Orgánica de la Jurisdicción Especial de la Justicia de Paz Comunal**, el Juez de Paz Comunal es un tercero imparcial electo por la comunidad, investido de potestad para:
+    * **Promover la conciliación y la mediación** como vías principales para la solución pacífica de conflictos de convivencia vecinal, familiar y comunitaria.
+    * **Decidir en equidad** sobre aquellas controversias que las partes le sometan voluntariamente, siempre que no vulneren el orden público ni las leyes de la República.
+    * **Ejercer funciones preventivas y pedagógicas** orientadas a fomentar los valores de solidaridad, paz y respeto en el Circuito Comunal.
+    """)
+    
+    st.markdown("---")
+    st.markdown("### 📜 Enlaces a Leyes de Interés (Normativa Venezolana)")
+    st.markdown("""
+    * [Ley Orgánica de la Jurisdicción Especial de Justicia de Paz Comunal (Gaceta Oficial)](http://www.tsj.gob.ve)
+    * [Constitución de la República Bolivariana de Venezuela](http://www.tsj.gob.ve/web/guest/constitucion-de-la-republica-bolivariana-de-venezuela)
+    * [Código Civil Venezolano](http://www.tsj.gob.ve)
+    * [Ley Orgánica de las Comunas](http://www.mincomunas.gob.ve)
+    """)
+    
+    st.markdown("---")
+    st.markdown("### 🌐 Sitios Institucionales de Interés")
+    st.markdown("""
+    * [Tribunal Supremo de Justicia (TSJ)](http://www.tsj.gob.ve)
+    * [Ministerio del Poder Popular para Relaciones Interiores, Justicia y Paz](http://www.mpprijp.gob.ve)
+    * [Ministerio del Poder Popular para las Comunas y los Movimientos Sociales](http://www.mincomunas.gob.ve)
+    """)
