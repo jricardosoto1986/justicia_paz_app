@@ -244,8 +244,8 @@ with col2:
         if os.path.exists("assets/logo_tsj.png"):
             st.image("assets/logo_tsj.png", width=80)
     with l_col2:
-        if os.path.exists("assets/logo_coordinacion_nacional.png"):
-            st.image("assets/logo_coordinacion_nacional.png", width=80)
+        if os.path.exists("assets/logo_paz_comunal.png"):
+            st.image("assets/logo_paz_comunal.png", width=80)
     with l_col3:
         if os.path.exists("assets/logo_paz_comunal.png"):
             st.image("assets/logo_paz_comunal.png", width=80)
