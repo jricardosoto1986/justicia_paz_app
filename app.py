@@ -544,7 +544,7 @@ with menu[2]:
             # Color distintivo según el estado
             badge_color = "orange" if exp['estado_caso'] == "Pendiente" else "blue" if exp['estado_caso'] == "En Mediación" else "green"
             
-            with st.expander(f"📁 Expediente #{exp['id']} - Solicitante: {exp['solicitante']} vs {exp['solicitado']} [{exp['estado_caso']}]"):
+                with st.expander(f"📁 Expediente #{exp_id} - Solicitante: {solicitante} vs {solicitado} [{estado}]"):
                 col_info1, col_info2 = st.columns(2)
                 
                 with col_info1:
