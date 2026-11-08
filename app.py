@@ -78,9 +78,9 @@ def generar_pdf_auto_inicio(num_expediente, solicitante_nombre, solicitante_cedu
     pdf.add_page()
     
     if os.path.exists("assets/logo_tsj.png"):
-        pdf.image("assets/logo_tsj.png", x=10, y=8, w=22)
+        pdf.image("assets/logo_tsj.png", x=10, y=8, w=30)
     if os.path.exists("assets/logo_paz_comunal.png"):
-        pdf.image("assets/logo_paz_comunal.png", x=175, y=8, w=22)
+        pdf.image("assets/logo_paz_comunal.png", x=175, y=8, w=30)
 
     pdf.set_font("Arial", "B", 10)
     pdf.cell(0, 5, limpiar_texto("REPÚBLICA BOLIVARIANA DE VENEZUELA"), 0, 1, "C")
@@ -227,13 +227,13 @@ def guardar_o_buscar_persona(cursor, nac, cedula, nombres, apellidos, telf, dire
 c1, c2, c3 = st.columns([1, 4, 1])
 with c1:
     if os.path.exists("assets/logo_tsj.png"):
-        st.image("assets/logo_tsj.png", width=90)
+        st.image("assets/logo_tsj.png", width=150)
 with c2:
     st.markdown("<h2 style='text-align: center;'>⚖️ Justicia de Paz Comunal</h2>", unsafe_allow_html=True)
     st.markdown("<p style='text-align: center; color: gray;'>Circuito Comunal Santa Laguna del Valle de los Laureles - San Juan de los Morros</p>", unsafe_allow_html=True)
 with c3:
     if os.path.exists("assets/logo_paz_comunal.png"):
-        st.image("assets/logo_paz_comunal.png", width=90)
+        st.image("assets/logo_paz_comunal.png", width=150)
 
 st.markdown("---")
 
