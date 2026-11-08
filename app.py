@@ -224,17 +224,19 @@ def guardar_o_buscar_persona(cursor, nac, cedula, nombres, apellidos, telf, dire
         return cursor.lastrowid
 
 # ==================== ENCABEZADO Y LOGIN EN SIDEBAR ====================
-c1, c2, c3 = st.columns([1, 4, 1])
+c1, c2,c3, c4 = st.columns([1, 4, 1])
 with c1:
     if os.path.exists("assets/logo_tsj.png"):
         st.image("assets/logo_tsj.png", width=150)
 with c2:
-    st.markdown("<h2 style='text-align: center;'>⚖️ Justicia de Paz Comunal</h2>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; color: gray;'>Circuito Comunal Santa Laguna del Valle de los Laureles - San Juan de los Morros</p>", unsafe_allow_html=True)
+    if os.path.exists("assets/logo_coordinacion_nacional.png", width=150)
+	st.image("assets/logo_coordinacion_nacional.png")
 with c3:
     if os.path.exists("assets/logo_paz_comunal.png"):
         st.image("assets/logo_paz_comunal.png", width=150)
-
+with c4:
+    st.markdown("<h2 style='text-align: center;'>⚖️ Justicia de Paz Comunal</h2>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: gray;'>Circuito Comunal Santa Laguna del Valle de los Laureles - San Juan de los Morros</p>", unsafe_allow_html=True)
 st.markdown("---")
 
 if 'usuario_logueado' not in st.session_state:
