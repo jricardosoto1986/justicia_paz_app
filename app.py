@@ -538,33 +538,40 @@ with menu[2]:
                             st.error(f"Error al actualizar el estatus: {e}")
 
                 st.markdown("---")
-                st.markdown("#### 📄 Generación y Descarga de Documentos del Expediente")
+                st.markdown("#### 📄 Generación y Descarga de Documentos del Expediente (PDF Oficial)")
                 
                 col_doc1, col_doc2, col_doc3 = st.columns(3)
+                
                 with col_doc1:
+                    # Generamos el PDF del Auto de Inicio con los datos reales del caso
+                    pdf_auto = generar_pdf_auto_inicio(
+                        exp_id, solicitante, "S/C", "", "No especificada",
+                        solicitado, "No especificada", exp.get('materia', 'Convivencia Comunitaria'),
+                        motivo, exp.get('pretension', 'No especificada')
+                    )
                     st.download_button(
-                        label="📥 Descargar Auto de Inicio",
-                        data=f"Expediente #{exp_id}\nSolicitante: {solicitante}\nSolicitado: {solicitado}\nMotivo: {motivo}",
-                        file_name=f"Auto_Inicio_Exp_{exp_id}.txt",
-                        mime="text/plain",
+                        label="📄 Descargar Auto de Inicio",
+                        data=pdf_auto,
+                        file_name=f"Auto_Inicio_Exp_{exp_id}.pdf",
+                        mime="application/pdf",
                         key=f"dl_inicio_{exp_id}"
                     )
+                    
                 with col_doc2:
+                    # Generamos la Boleta de Citación oficial en PDF
+                    pdf_cit = generar_boleta_citacion(
+                        exp_id, solicitado, "No especificada", solicitante
+                    )
                     st.download_button(
-                        label="📥 Descargar Boleta de Citación",
-                        data=f"BOLETA DE CITACIÓN\nExpediente #{exp_id}\nCitado: {solicitado}\nPromovente: {solicitante}",
-                        file_name=f"Boleta_Citacion_Exp_{exp_id}.txt",
-                        mime="text/plain",
+                        label="📄 Descargar Boleta Citación",
+                        data=pdf_cit,
+                        file_name=f"Boleta_Citacion_Exp_{exp_id}.pdf",
+                        mime="application/pdf",
                         key=f"dl_citacion_{exp_id}"
                     )
+                    
                 with col_doc3:
-                    st.download_button(
-                        label="📥 Descargar Acta / Cierre",
-                        data=f"ACTA DE CIERRE / CONCILIACIÓN\nExpediente #{exp_id}\nEstado actual: {estado}",
-                        file_name=f"Acta_Cierre_Exp_{exp_id}.txt",
-                        mime="text/plain",
-                        key=f"dl_cierre_{exp_id}"
-                    )
+                    st.info(f"Estado del acta: {estado}")
 # TAB 4: MARCO LEGAL Y COMPETENCIAS
 with menu[3]:
     st.subheader("📚 Marco Legal, Institucional y Competencias")
