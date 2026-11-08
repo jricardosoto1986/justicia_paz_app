@@ -539,6 +539,35 @@ with menu[2]:
                             st.rerun()
                         except Exception as e:
                             st.error(f"Error al actualizar el estatus: {e}")
+st.markdown("---")
+                st.markdown("#### 📄 Generación y Descarga de Documentos del Expediente")
+                
+                col_doc1, col_doc2, col_doc3 = st.columns(3)
+                with col_doc1:
+                    # Aquí puedes enlazar tu función de generación de PDF para el Auto de Inicio
+                    st.download_button(
+                        label="📥 Descargar Auto de Inicio",
+                        data=f"Expediente #{exp_id}\nSolicitante: {solicitante}\nSolicitado: {solicitado}\nMotivo: {motivo}",
+                        file_name=f"Auto_Inicio_Exp_{exp_id}.txt",
+                        mime="text/plain",
+                        key=f"dl_inicio_{exp_id}"
+                    )
+                with col_doc2:
+                    st.download_button(
+                        label="📥 Descargar Boleta de Citación",
+                        data=f"BOLETA DE CITACIÓN\nExpediente #{exp_id}\nCitado: {solicitado}\nPromovente: {solicitante}",
+                        file_name=f"Boleta_Citacion_Exp_{exp_id}.txt",
+                        mime="text/plain",
+                        key=f"dl_citacion_{exp_id}"
+                    )
+                with col_doc3:
+                    st.download_button(
+                        label="📥 Descargar Acta / Cierre",
+                        data=f"ACTA DE CIERRE / CONCILIACIÓN\nExpediente #{exp_id}\nEstado actual: {estado}",
+                        file_name=f"Acta_Cierre_Exp_{exp_id}.txt",
+                        mime="text/plain",
+                        key=f"dl_cierre_{exp_id}"
+                    )
 # TAB 4: MARCO LEGAL Y COMPETENCIAS
 with menu[3]:
     st.subheader("📚 Marco Legal, Institucional y Competencias")
