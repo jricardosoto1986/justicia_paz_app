@@ -573,24 +573,108 @@ with menu[3]:
     st.subheader("📚 Marco Legal, Institucional y Competencias")
     
     st.markdown("### 👨‍⚖️ Competencias del Juez de Paz Comunal")
-    st.write("""
-    De acuerdo con la **Ley Orgánica de la Jurisdicción Especial de la Justicia de Paz Comunal**, el Juez de Paz Comunal es un tercero imparcial electo por la comunidad, investido de potestad para:
-    * **Promover la conciliación y la mediación** como vías principales para la solución pacífica de conflictos de convivencia vecinal, familiar y comunitaria.
-    * **Decidir en equidad** sobre aquellas controversias que las partes le sometan voluntariamente, siempre que no vulneren el orden público ni las leyes de la República.
-    * **Ejercer funciones preventivas y pedagógicas** orientadas a fomentar los valores de solidaridad, paz y respeto en el Circuito Comunal.
-    """)
+    st.info("Extracto oficial conforme a la normativa vigente que rige la actuación de la Jurisdicción Especial.")
+    
+    # Visualizador destacado del Artículo 8
+    with st.expander("📖 Ver Artículo 8: Competencias del Juez o Jueza de Paz Comunal (Ley Orgánica Vigente)", expanded=True):
+        st.markdown("""
+        **Artículo 8.** El Juez o Jueza de Paz Comunal tiene competencia para:
+        1. **Conocer y resolver** mediante la conciliación, la mediación o el fallo en equidad, los conflictos comunitarios, vecinales y familiares que le sean sometidos a su consideración.
+        2. **Conocer de los hechos, actos u omisiones** que alteren la convivencia comunitaria o atenten contra la tranquilidad, la paz y las buenas costumbres en el ámbito local.
+        3. **Dictar las medidas preventivas y de protección** que correspondan dentro del marco de su competencia para garantizar la paz y la armonía social.
+        4. **Articular** con los órganos del Poder Público y las organizaciones del Poder Popular la resolución de los problemas colectivos de la comunidad.
+        5. **Ejercer funciones pedagógicas y preventivas** orientadas a fomentar la cultura de paz, el diálogo, la solidaridad y la resolución pacífica de los conflictos.
+        6. Las demás que le señalen la Constitución de la República Bolivariana de Venezuela, las leyes y los reglamentos aplicables.
+        """)
     
     st.markdown("---")
-    st.markdown("### 📜 Enlaces a Leyes de Interés (Normativa Venezolana)")
-    st.markdown("""
-    * [Ley Orgánica de la Jurisdicción Especial de Justicia de Paz Comunal (Gaceta Oficial)](http://www.tsj.gob.ve)
-    * [Constitución de la República Bolivariana de Venezuela](http://www.tsj.gob.ve/web/guest/constitucion-de-la-republica-bolivariana-de-venezuela)
-    * [Código Civil Venezolano](http://www.tsj.gob.ve)
-    * [Ley Orgánica de las Comunas](http://www.mincomunas.gob.ve)
-    """)
+    st.markdown("### 📥 Repositorio Documental y Normativo (PDF)")
+    st.write("Seleccione la categoría de su interés para descargar de forma directa los textos legales oficiales respaldados en el sistema:")
     
+    # Categoría 1: Justicia de Paz y Poder Popular
+    st.markdown("#### 🏛️ 1. Justicia de Paz Comunal y Poder Popular")
+    c1, c2 = st.columns(2)
+    with c1:
+        ruta = "docs/Ley Orgánica de la Justicia de Paz Comunal Vigente.pdf"
+        if os.path.exists(ruta):
+            with open(ruta, "rb") as f:
+                st.download_button("📄 Ley Orgánica de Justicia de Paz Comunal", f, file_name="Ley_Organica_Justicia_Paz_Comunal.pdf", mime="application/pdf", key="d1")
+        ruta_comunas = "docs/Ley-Organica-de-las-Comunas.pdf"
+        if os.path.exists(ruta_comunas):
+            with open(ruta_comunas, "rb") as f:
+                st.download_button("📄 Ley Orgánica de las Comunas", f, file_name="Ley_Organica_Comunas.pdf", mime="application/pdf", key="d2")
+        ruta_consejos = "docs/Ley Orgánica de Reforma de la Ley de los Consejos Comunales Vigente.pdf"
+        if os.path.exists(ruta_consejos):
+            with open(ruta_consejos, "rb") as f:
+                st.download_button("📄 Ley de los Consejos Comunales (Reforma)", f, file_name="Ley_Consejos_Comunales.pdf", mime="application/pdf", key="d3")
+    with c2:
+        ruta_pp = "docs/Ley-Organica-del-Poder-Popular.pdf"
+        if os.path.exists(ruta_pp):
+            with open(ruta_pp, "rb") as f:
+                st.download_button("📄 Ley Orgánica del Poder Popular", f, file_name="Ley_Poder_Popular.pdf", mime="application/pdf", key="d4")
+        ruta_seco = "docs/Ley-Organica-del-Sistema-Economico-Comunal.pdf"
+        if os.path.exists(ruta_seco):
+            with open(ruta_seco, "rb") as f:
+                st.download_button("📄 Sistema Económico Comunal", f, file_name="Sistema_Economico_Comunal.pdf", mime="application/pdf", key="d5")
+        ruta_gestion = "docs/Ley-Organica-de-Gestion-comunitaria.pdf"
+        if os.path.exists(ruta_gestion):
+            with open(ruta_gestion, "rb") as f:
+                st.download_button("📄 Ley de Gestión Comunitaria", f, file_name="Gestion_Comunitaria.pdf", mime="application/pdf", key="d6")
+
+    # Categoría 2: Planificación, Contraloría y Gobierno
+    st.markdown("#### 📊 2. Planificación, Contraloría Social y Gobierno")
+    c3, c4 = st.columns(2)
+    with c3:
+        ruta_plan = "docs/Ley-Organica-de-Planificacion-Publica-y-Popular.pdf"
+        if os.path.exists(ruta_plan):
+            with open(ruta_plan, "rb") as f:
+                st.download_button("📄 Planificación Pública y Popular", f, file_name="Planificacion_Publica.pdf", mime="application/pdf", key="d7")
+        ruta_contra = "docs/Ley-Organica-de-Contraloria-Social.pdf"
+        if os.path.exists(ruta_contra):
+            with open(ruta_contra, "rb") as f:
+                st.download_button("📄 Ley Orgánica de Contraloría Social", f, file_name="Contraloria_Social.pdf", mime="application/pdf", key="d8")
+    with c4:
+        ruta_cfg = "docs/Ley-Organica-del-Consejo-Federal-de-Gobierno-y-su-Reglamento.pdf"
+        if os.path.exists(ruta_cfg):
+            with open(ruta_cfg, "rb") as f:
+                st.download_button("📄 Consejo Federal de Gobierno", f, file_name="Consejo_Federal_Gobierno.pdf", mime="application/pdf", key="d9")
+        ruta_reg_eco = "docs/Reglamento-Parcial-de-la-Ley-Organica-de-la-economia-comunal.pdf"
+        if os.path.exists(ruta_reg_eco):
+            with open(ruta_reg_eco, "rb") as f:
+                st.download_button("📄 Regl. Parcial Economía Comunal", f, file_name="Reglamento_Economia_Comunal.pdf", mime="application/pdf", key="d10")
+
+    # Categoría 3: Constitucional, Derechos Humanos, Protección y Civil
+    st.markdown("#### ⚖️ 3. Marco Constitucional, Derechos Humanos y Sustantivo")
+    c5, c6 = st.columns(2)
+    with c5:
+        ruta_crbv = "docs/Constitución de la República Bolivariana de Venezuela.pdf"
+        if os.path.exists(ruta_crbv):
+            with open(ruta_crbv, "rb") as f:
+                st.download_button("📄 Constitución de la RBV (CRBV)", f, file_name="Constitucion_CRBV.pdf", mime="application/pdf", key="d11")
+        ruta_dudh = "docs/Declaracion-Universal-de-Derechos-Humanos.pdf"
+        if os.path.exists(ruta_dudh):
+            with open(ruta_dudh, "rb") as f:
+                st.download_button("📄 Declaración Universal de DDHH", f, file_name="Declaracion_Universal_DDHH.pdf", mime="application/pdf", key="d12")
+        ruta_lopnna = "docs/Ley Orgánica de Protección al Niño, Niña y Adolescentes.pdf"
+        if os.path.exists(ruta_lopnna):
+            with open(ruta_lopnna, "rb") as f:
+                st.download_button("📄 LOPNNA", f, file_name="LOPNNA.pdf", mime="application/pdf", key="d13")
+    with c6:
+        ruta_vcm = "docs/Ley Orgánica sobre el Derecho de las Mujeres a una Vida Libre de Violencia Vigente.pdf"
+        if os.path.exists(ruta_vcm):
+            with open(ruta_vcm, "rb") as f:
+                st.download_button("📄 Ley Sobre la Violencia de Género", f, file_name="Ley_Violencia_Genero.pdf", mime="application/pdf", key="d14")
+        ruta_cc = "docs/codigo_civil_venezuela.pdf"
+        if os.path.exists(ruta_cc):
+            with open(ruta_cc, "rb") as f:
+                st.download_button("📄 Código Civil Venezolano", f, file_name="Codigo_Civil.pdf", mime="application/pdf", key="d15")
+        ruta_cpc = "docs/Codigo-Procedimiento-Civil.pdf"
+        if os.path.exists(ruta_cpc):
+            with open(ruta_cpc, "rb") as f:
+                st.download_button("📄 Código de Procedimiento Civil", f, file_name="Codigo_Procedimiento_Civil.pdf", mime="application/pdf", key="d16")
+
     st.markdown("---")
-    st.markdown("### 🌐 Sitios Institucionales de Interés")
+    st.markdown("### 🌐 Enlaces Externos de Interés Institucional")
     st.markdown("""
     * [Tribunal Supremo de Justicia (TSJ)](http://www.tsj.gob.ve)
     * [Ministerio del Poder Popular para Relaciones Interiores, Justicia y Paz](http://www.mpprijp.gob.ve)
