@@ -477,12 +477,69 @@ with menu[2]:
     else:
         st.write(f"Total de expedientes en el sistema: **{len(expedientes)}**")
         
-        # Buscador rápido o filtro por estado
+# Buscador rápido o filtro por estado
         filtro_estado = st.selectbox("Filtrar expedientes por estatus:", ["Todos", "Pendiente", "En Mediación", "Conciliado", "Remitido"])
         
         for exp in expedientes:
-            if filtro_estado != "Todos" and exp['estado_caso'] != filtro_estado:
+            # Claves seguras para evitar KeyErrors si las columnas de la BD tienen nombres distintos
+            exp_id = exp.get('id', 'S/N')
+            solicitante = exp.get('solicitante') or exp.get('nombre_solicitante') or exp.get('nombres_solicitante') or 'No especificado'
+            solicitado = exp.get('solicitado') or exp.get('nombre_solicitado') or exp.get('nombres_solicitado') or 'No especificado'
+            estado = exp.get('estado_caso') or exp.get('estado') or 'Pendiente'
+            motivo = exp.get('motivo') or exp.get('descripcion') or 'Sin motivo'
+            fecha_creacion = exp.get('fecha_creacion') or exp.get('fecha') or 'No registrada'
+            
+            if filtro_estado != "Todos" and estado != filtro_estado:
                 continue
+                
+            # Color distintivo según el estado
+            badge_color = "orange" if estado == "Pendiente" else "blue" if estado == "En Mediación" else "green"
+            
+            with st.expander(f"📁 Expediente #{exp_id} - Solicitante: {solicitante} vs {solicitado} [{estado}]"):
+                col_info1, col_info2 = st.columns(2)
+                
+                with col_info1:
+                    st.markdown(f"**Motivo / Conflicto:** {motivo}")
+                    st.markdown(f"**Fecha de Recepción:** {fecha_creacion}")
+                    
+                with col_info2:
+                    st.markdown(f"**Estatus Actual:** :{badge_color}[{estado}]")
+                    fecha_act = exp.get('fecha_actualizacion_estatus', 'Pendiente de actualización')
+                    st.markdown(f"**Última Modificación:** {fecha_act}")
+                
+                st.markdown("---")
+                st.markdown("#### 🛠️ Acciones del Despacho y Actualización")
+                
+                col_st1, col_st2 = st.columns([2, 1])
+                
+                with col_st1:
+                    opciones_estado = ["Pendiente", "En Mediación", "Conciliado", "Remitido"]
+                    idx_actual = opciones_estado.index(estado) if estado in opciones_estado else 0
+                    
+                    nuevo_estado = st.selectbox(
+                        "Cambiar Estatus del Caso",
+                        opciones_estado,
+                        index=idx_actual,
+                        key=f"sel_st_{exp_id}"
+                    )
+                
+                with col_st2:
+                    st.write("") # Espaciado vertical
+                    st.write("")
+                    if st.button("💾 Guardar Estatus", key=f"btn_st_{exp_id}", use_container_width=True):
+                        try:
+                            conn = get_db_connection()
+                            cursor = conn.cursor()
+                            cursor.execute(
+                                "UPDATE expedientes SET estado_caso = %s, fecha_actualizacion_estatus = NOW() WHERE id = %s",
+                                (nuevo_estado, exp_id)
+                            )
+                            conn.commit()
+                            conn.close()
+                            st.success(f"¡Estatus actualizado a '{nuevo_estado}' con sello de tiempo oficial!")
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"Error al actualizar el estatus: {e}")
                 
             # Color distintivo según el estado
             badge_color = "orange" if exp['estado_caso'] == "Pendiente" else "blue" if exp['estado_caso'] == "En Mediación" else "green"
