@@ -456,117 +456,80 @@ with menu[1]:
         except Exception as e:
             st.error(f"Error consultando la base de datos: {e}")
 
-# TAB 3: MÓDULO DEL JUEZ DE PAZ
+# TAB 3: MÓDULO DEL JUEZ DE PAZ / GESTIÓN DE EXPEDIENTES
 with menu[2]:
-    st.subheader("👨‍⚖️ Panel de Gestión del Juez de Paz")
+    st.subheader("⚖️ Módulo de Gestión y Decisión del Juez de Paz Comunal")
+    st.info("Visualización integral de expedientes, registro de actuaciones y actualización de estatus con marca de tiempo oficial.")
     
-    usuario_actual = st.session_state['usuario_logueado']
-    if not usuario_actual or usuario_actual['rol'] != 'juez':
-        st.warning("🔒 Esta sección está reservada exclusivamente para los Jueces de Paz Comunal. Inicie sesión con su cuenta de Juez en la barra lateral.")
-    else:
-        col_f1, col_f2 = st.columns(2)
-        cc_filtro = col_f1.selectbox("Filtrar por Consejo Comunal:", CONSEJOS_COMUNALES)
-        est_filtro = col_f2.selectbox("Filtrar por Estado del Caso:", ["Todos", "Recibido", "Citado", "En Audiencia", "Conciliado", "Archivado"])
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT * FROM expedientes ORDER BY fecha_creacion DESC")
+        expedientes = cursor.fetchall()
+        conn.close()
+    except Exception as e:
+        st.error(f"Error al conectar con la base de datos para cargar expedientes: {e}")
+        expedientes = []
         
-        try:
-            conn = get_db_connection()
-            cursor = conn.cursor(dictionary=True)
-            
-            sql = """
-                SELECT e.id, e.numero_expediente, e.materia, e.sintesis_hechos, e.pretension, 
-                       e.estado_caso, e.fecha_ingreso,
-                       CONCAT(p1.nombres, ' ', p1.apellidos) as solicitante, p1.cedula as ced_sol, 
-                       p1.telefono as tel_sol, p1.direccion_habitacion as dir_sol, p1.consejo_comunal,
-                       CONCAT(p2.nombres, ' ', p2.apellidos) as requerido, p2.direccion_habitacion as dir_req
-                FROM expedientes e
-                JOIN personas p1 ON e.solicitante_id = p1.id
-                JOIN personas p2 ON e.requerido_id = p2.id
-                WHERE 1=1
-            """
-            params = []
-            
-            if cc_filtro != "Todos":
-                sql += " AND p1.consejo_comunal = %s"
-                params.append(cc_filtro)
+    if not expedientes:
+        st.warning("No hay expedientes registrados en el sistema actualmente.")
+    else:
+        st.write(f"Total de expedientes en el sistema: **{len(expedientes)}**")
+        
+        # Buscador rápido o filtro por estado
+        filtro_estado = st.selectbox("Filtrar expedientes por estatus:", ["Todos", "Pendiente", "En Mediación", "Conciliado", "Remitido"])
+        
+        for exp in expedientes:
+            if filtro_estado != "Todos" and exp['estado_caso'] != filtro_estado:
+                continue
                 
-            if est_filtro != "Todos":
-                sql += " AND e.estado_caso = %s"
-                params.append(est_filtro)
+            # Color distintivo según el estado
+            badge_color = "orange" if exp['estado_caso'] == "Pendiente" else "blue" if exp['estado_caso'] == "En Mediación" else "green"
+            
+            with st.expander(f"📁 Expediente #{exp['id']} - Solicitante: {exp['solicitante']} vs {exp['solicitado']} [{exp['estado_caso']}]"):
+                col_info1, col_info2 = st.columns(2)
                 
-            sql += " ORDER BY e.fecha_ingreso DESC"
-            
-            cursor.execute(sql, tuple(params))
-            expedientes_juez = cursor.fetchall()
-            conn.close()
-            
-            st.metric("Total de Expedientes Filtrados", len(expedientes_juez))
-            st.markdown("---")
-            
-            for exp in expedientes_juez:
-                with st.expander(f"📁 Expediente {exp['numero_expediente']} - {exp['solicitante']} vs {exp['requerido']} [{exp['estado_caso']}]"):
-                    c1, c2 = st.columns(2)
-                    with c1:
-                        st.markdown("**Datos del Solicitante:**")
-                        st.write(f"- Cédula: {exp['ced_sol']}")
-                        st.write(f"- Teléfono: {exp['tel_sol']}")
-                        st.write(f"- Consejo Comunal: {exp['consejo_comunal']}")
-                    with c2:
-                        st.markdown("**Datos del Requerido:**")
-                        st.write(f"- Nombre: {exp['requerido']}")
-                        st.write(f"- Dirección Citación: {exp['dir_req']}")
+                with col_info1:
+                    st.markdown(f"**Motivo / Conflicto:** {exp['motivo']}")
+                    st.markdown(f"**Fecha de Recepción:** {exp['fecha_creacion']}")
                     
-                    st.markdown("**Hechos y Pretensión:**")
-                    st.info(f"**Hechos:** {exp['sintesis_hechos']}")
-                    st.warning(f"**Pretensión:** {exp['pretension']}")
-                    
-                    col_st1, col_st2 = st.columns([2, 1])
-                    nuevo_estado = col_st1.selectbox(
-                        "Cambiar Estado del Caso:",
-                        ["Recibido", "Citado", "En Audiencia", "Conciliado", "Archivado"],
-                        index=["Recibido", "Citado", "En Audiencia", "Conciliado", "Archivado"].index(exp['estado_caso']),
-                        key=f"st_sel_{exp['id']}"
+                with col_info2:
+                    st.markdown(f"**Estatus Actual:** :{badge_color}[{exp['estado_caso']}]")
+                    # Mostramos la fecha del último cambio de estatus registrado
+                    fecha_act = exp.get('fecha_actualizacion_estatus', 'Pendiente de actualización')
+                    st.markdown(f"**Última Modificación:** {fecha_act}")
+                
+                st.markdown("---")
+                st.markdown("#### 🛠️ Acciones del Despacho y Actualización")
+                
+                col_st1, col_st2 = st.columns([2, 1])
+                
+                with col_st1:
+                    nuevo_estado = st.selectbox(
+                        "Cambiar Estatus del Caso",
+                        ["Pendiente", "En Mediación", "Conciliado", "Remitido"],
+                        index=["Pendiente", "En Mediación", "Conciliado", "Remitido"].index(exp['estado_caso']) if exp['estado_caso'] in ["Pendiente", "En Mediación", "Conciliado", "Remitido"] else 0,
+                        key=f"sel_st_{exp['id']}"
                     )
-                    
-                    if col_st2.button("💾 Actualizar Estado", key=f"btn_st_{exp['id']}"):
+                
+                with col_st2:
+                    st.write("") # Espaciado vertical para alinear el botón
+                    st.write("")
+                    if st.button("💾 Guardar Estatus", key=f"btn_st_{exp['id']}", use_container_width=True):
                         try:
                             conn = get_db_connection()
                             cursor = conn.cursor()
-                            cursor.execute("UPDATE expedientes SET estado_caso = %s WHERE id = %s", (nuevo_estado, exp['id']))
+                            # Actualiza el estatus y registra automáticamente la fecha y hora exacta
+                            cursor.execute(
+                                "UPDATE expedientes SET estado_caso = %s, fecha_actualizacion_estatus = NOW() WHERE id = %s",
+                                (nuevo_estado, exp['id'])
+                            )
                             conn.commit()
                             conn.close()
-                            st.success("¡Estatus actualizado correctamente!")
+                            st.success(f"¡Estatus actualizado a '{nuevo_estado}' con sello de tiempo oficial!")
                             st.rerun()
                         except Exception as e:
-                            st.error(f"Error al actualizar estado: {e}")
-                    
-                    col_d1, col_d2 = st.columns(2)
-                    
-                    pdf_juez = generar_pdf_auto_inicio(
-                        exp['numero_expediente'], exp['solicitante'], exp['ced_sol'],
-                        exp['tel_sol'], exp['dir_sol'], exp['requerido'],
-                        exp['dir_req'], exp['materia'], exp['sintesis_hechos'], exp['pretension']
-                    )
-                    col_d1.download_button(
-                        label="📄 Descargar Auto de Inicio (PDF)",
-                        data=pdf_juez,
-                        file_name=f"Auto_Inicio_{exp['numero_expediente']}.pdf",
-                        mime="application/pdf",
-                        key=f"dl_juez_{exp['id']}"
-                    )
-                    
-                    pdf_boleta = generar_boleta_citacion(
-                        exp['numero_expediente'], exp['requerido'], exp['dir_req'], exp['solicitante']
-                    )
-                    col_d2.download_button(
-                        label="📨 Descargar Boleta de Citación (PDF)",
-                        data=pdf_boleta,
-                        file_name=f"Boleta_Citacion_{exp['numero_expediente']}.pdf",
-                        mime="application/pdf",
-                        key=f"dl_bol_{exp['id']}"
-                    )
-
-        except Exception as e:
-            st.error(f"Error cargando módulo de juez: {e}")
+                            st.error(f"Error al actualizar el estatus: {e}")
 
 # TAB 4: MARCO LEGAL Y COMPETENCIAS
 with menu[3]:
