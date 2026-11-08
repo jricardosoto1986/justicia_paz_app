@@ -464,7 +464,6 @@ with menu[2]:
     try:
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
-        # Cambiamos fecha_creacion por id para ordenar por el registro más reciente
         cursor.execute("SELECT * FROM expedientes ORDER BY id DESC")
         expedientes = cursor.fetchall()
         conn.close()
@@ -477,23 +476,24 @@ with menu[2]:
     else:
         st.write(f"Total de expedientes en el sistema: **{len(expedientes)}**")
         
-# Buscador rápido o filtro por estado
-        filtro_estado = st.selectbox("Filtrar expedientes por estatus:", ["Todos", "Pendiente", "En Mediación", "Conciliado", "Remitido"])
+        # Buscador rápido o filtro por estado
+        filtro_estado = st.selectbox("Filtrar expedientes por estatus:", ["Todos", "Pendiente", "En Mediación", "Conciliado", "Remitido", "Citado"])
         
         for exp in expedientes:
-            # Claves seguras para evitar KeyErrors si las columnas de la BD tienen nombres distintos
-            exp_id = exp.get('id', 'S/N')
+            # Extracción segura de campos usando .get() para evitar cualquier KeyError
+            exp_id = exp.get('id') or exp.get('ID') or 'S/N'
             solicitante = exp.get('solicitante') or exp.get('nombre_solicitante') or exp.get('nombres_solicitante') or 'No especificado'
             solicitado = exp.get('solicitado') or exp.get('nombre_solicitado') or exp.get('nombres_solicitado') or 'No especificado'
             estado = exp.get('estado_caso') or exp.get('estado') or 'Pendiente'
-            motivo = exp.get('motivo') or exp.get('descripcion') or 'Sin motivo'
+            motivo = exp.get('motivo') or exp.get('descripcion') or 'Sin motivo registrado'
             fecha_creacion = exp.get('fecha_creacion') or exp.get('fecha') or 'No registrada'
+            fecha_act = exp.get('fecha_actualizacion_estatus') or 'Pendiente de actualización'
             
             if filtro_estado != "Todos" and estado != filtro_estado:
                 continue
                 
             # Color distintivo según el estado
-            badge_color = "orange" if estado == "Pendiente" else "blue" if estado == "En Mediación" else "green"
+            badge_color = "orange" if estado == "Pendiente" else "blue" if estado in ["En Mediación", "Citado"] else "green"
             
             with st.expander(f"📁 Expediente #{exp_id} - Solicitante: {solicitante} vs {solicitado} [{estado}]"):
                 col_info1, col_info2 = st.columns(2)
@@ -504,7 +504,6 @@ with menu[2]:
                     
                 with col_info2:
                     st.markdown(f"**Estatus Actual:** :{badge_color}[{estado}]")
-                    fecha_act = exp.get('fecha_actualizacion_estatus', 'Pendiente de actualización')
                     st.markdown(f"**Última Modificación:** {fecha_act}")
                 
                 st.markdown("---")
@@ -513,7 +512,7 @@ with menu[2]:
                 col_st1, col_st2 = st.columns([2, 1])
                 
                 with col_st1:
-                    opciones_estado = ["Pendiente", "En Mediación", "Conciliado", "Remitido"]
+                    opciones_estado = ["Pendiente", "En Mediación", "Citado", "Conciliado", "Remitido"]
                     idx_actual = opciones_estado.index(estado) if estado in opciones_estado else 0
                     
                     nuevo_estado = st.selectbox(
@@ -540,55 +539,6 @@ with menu[2]:
                             st.rerun()
                         except Exception as e:
                             st.error(f"Error al actualizar el estatus: {e}")
-                
-            # Color distintivo según el estado
-            badge_color = "orange" if exp['estado_caso'] == "Pendiente" else "blue" if exp['estado_caso'] == "En Mediación" else "green"
-            
-                with st.expander(f"📁 Expediente #{exp_id} - Solicitante: {solicitante} vs {solicitado} [{estado}]"):
-                col_info1, col_info2 = st.columns(2)
-                
-                with col_info1:
-                    st.markdown(f"**Motivo / Conflicto:** {exp['motivo']}")
-                    st.markdown(f"**Fecha de Recepción:** {exp['fecha_creacion']}")
-                    
-                with col_info2:
-                    st.markdown(f"**Estatus Actual:** :{badge_color}[{exp['estado_caso']}]")
-                    # Mostramos la fecha del último cambio de estatus registrado
-                    fecha_act = exp.get('fecha_actualizacion_estatus', 'Pendiente de actualización')
-                    st.markdown(f"**Última Modificación:** {fecha_act}")
-                
-                st.markdown("---")
-                st.markdown("#### 🛠️ Acciones del Despacho y Actualización")
-                
-                col_st1, col_st2 = st.columns([2, 1])
-                
-                with col_st1:
-                    nuevo_estado = st.selectbox(
-                        "Cambiar Estatus del Caso",
-                        ["Pendiente", "En Mediación", "Conciliado", "Remitido"],
-                        index=["Pendiente", "En Mediación", "Conciliado", "Remitido"].index(exp['estado_caso']) if exp['estado_caso'] in ["Pendiente", "En Mediación", "Conciliado", "Remitido"] else 0,
-                        key=f"sel_st_{exp['id']}"
-                    )
-                
-                with col_st2:
-                    st.write("") # Espaciado vertical para alinear el botón
-                    st.write("")
-                    if st.button("💾 Guardar Estatus", key=f"btn_st_{exp['id']}", use_container_width=True):
-                        try:
-                            conn = get_db_connection()
-                            cursor = conn.cursor()
-                            # Actualiza el estatus y registra automáticamente la fecha y hora exacta
-                            cursor.execute(
-                                "UPDATE expedientes SET estado_caso = %s, fecha_actualizacion_estatus = NOW() WHERE id = %s",
-                                (nuevo_estado, exp['id'])
-                            )
-                            conn.commit()
-                            conn.close()
-                            st.success(f"¡Estatus actualizado a '{nuevo_estado}' con sello de tiempo oficial!")
-                            st.rerun()
-                        except Exception as e:
-                            st.error(f"Error al actualizar el estatus: {e}")
-
 # TAB 4: MARCO LEGAL Y COMPETENCIAS
 with menu[3]:
     st.subheader("📚 Marco Legal, Institucional y Competencias")
