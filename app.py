@@ -235,20 +235,20 @@ def guardar_o_buscar_persona(cursor, nac, cedula, nombres, apellidos, telf, dire
         return cursor.lastrowid
 
 # ==================== ENCABEZADO Y LOGIN EN SIDEBAR ====================
-col1, col2, col3 = st.columns([1, 3, 1])
+col1, col2, col3 = st.columns([1, 4, 1])
 
 with col2:
-    # 3 Logos institucionales arriba en la interfaz web
-    sub_c1, sub_c2, sub_c3 = st.columns(3)
-    with sub_c1:
+    # Contenedor para alinear los 3 logos perfectamente en una sola fila centrada
+    l_col1, l_col2, l_col3 = st.columns(3)
+    with l_col1:
         if os.path.exists("assets/logo_tsj.png"):
-            st.image("assets/logo_tsj.png", width=75)
-    with sub_c2:
+            st.image("assets/logo_tsj.png", width=90)
+    with l_col2:
         if os.path.exists("assets/logo_coordinacion_nacional.png"):
-            st.image("assets/logo_coordinacion_nacional.png", width=75)
-    with sub_c3:
+            st.image("assets/logo_coordinacion_nacional.png", width=90)
+    with l_col3:
         if os.path.exists("assets/logo_paz_comunal.png"):
-            st.image("assets/logo_paz_comunal.png", width=75)
+            st.image("assets/logo_paz_comunal.png", width=90)
             
     st.markdown("---")
     
