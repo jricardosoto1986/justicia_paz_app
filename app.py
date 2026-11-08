@@ -238,26 +238,27 @@ def guardar_o_buscar_persona(cursor, nac, cedula, nombres, apellidos, telf, dire
 col1, col2, col3 = st.columns([1, 4, 1])
 
 with col2:
-    # Contenedor para alinear los 3 logos perfectamente en una sola fila centrada
+    # Contenedor para alinear los 3 logos en una sola fila centrada
     l_col1, l_col2, l_col3 = st.columns(3)
     with l_col1:
         if os.path.exists("assets/logo_tsj.png"):
-            st.image("assets/logo_tsj.png", width=90)
+            st.image("assets/logo_tsj.png", width=80)
     with l_col2:
         if os.path.exists("assets/logo_coordinacion_nacional.png"):
-            st.image("assets/logo_coordinacion_nacional.png", width=90)
+            st.image("assets/logo_coordinacion_nacional.png", width=80)
     with l_col3:
         if os.path.exists("assets/logo_paz_comunal.png"):
-            st.image("assets/logo_paz_comunal.png", width=90)
+            st.image("assets/logo_paz_comunal.png", width=80)
             
-    st.markdown("---")
+    # Línea divisoria muy compacta
+    st.markdown("<hr style='margin: 10px 0px;'>", unsafe_allow_html=True)
     
-    # Títulos institucionales centrados abajo
-    st.markdown("<h5 style='text-align: center; color: #555; margin-bottom: 0px;'>República Bolivariana de Venezuela</h5>", unsafe_allow_html=True)
-    st.markdown("<h5 style='text-align: center; color: #555; margin-bottom: 0px;'>Circuito Comunal Santa Laguna del Valle de los Laureles</h5>", unsafe_allow_html=True)
-    st.markdown("<h3 style='text-align: center; font-weight: bold; margin-top: 5px;'>Sistema de Gestión - Justicia de Paz Comunal</h3>", unsafe_allow_html=True)
+    # Títulos institucionales compactos (sin espacios muertos)
+    st.markdown("<p style='text-align: center; color: #555; font-size: 14px; font-weight: bold; margin: 0px; line-height: 1.2;'>REPÚBLICA BOLIVARIANA DE VENEZUELA</p>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: #555; font-size: 13px; font-weight: bold; margin: 2px 0px; line-height: 1.2;'>CIRCUITO COMUNAL SANTA LAGUNA DEL VALLE DE LOS LAURELES</p>", unsafe_allow_html=True)
+    st.markdown("<h4 style='text-align: center; font-weight: bold; margin: 5px 0px 0px 0px; line-height: 1.2;'>Sistema de Gestión - Justicia de Paz Comunal</h4>", unsafe_allow_html=True)
 
-st.markdown("---")
+st.markdown("<hr style='margin: 15px 0px;'>", unsafe_allow_html=True)
 
 if 'usuario_logueado' not in st.session_state:
     st.session_state['usuario_logueado'] = None
