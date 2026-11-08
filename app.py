@@ -229,7 +229,7 @@ with c1:
     if os.path.exists("assets/logo_tsj.png"):
         st.image("assets/logo_tsj.png", width=150)
 with c2:
-    if os.path.exists("assets/logo_coordinacion_nacional.png", width=150)
+    if os.path.exists("assets/logo_coordinacion_nacional.png", width=150):
 	st.image("assets/logo_coordinacion_nacional.png")
 with c3:
     if os.path.exists("assets/logo_paz_comunal.png"):
