@@ -462,7 +462,6 @@ with menu[2]:
     st.info("Visualización integral de expedientes, registro de actuaciones y actualización de estatus con marca de tiempo oficial.")
     
     try:
-        try:
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
         # Cambiamos fecha_creacion por id para ordenar por el registro más reciente
