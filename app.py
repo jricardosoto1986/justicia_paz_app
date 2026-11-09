@@ -403,9 +403,9 @@ with menu[0]:
                 except Exception as e:
                     st.error(f"Error procesando la solicitud: {e}")
 
-# TAB 2: CONSULTAR (CIUDADANO AUTENTICADO)
+# TAB 2: CONSULTAR (CIUDADANO AUTENTICADO CON ETAPAS DEL PROCESO)
 with menu[1]:
-    st.subheader("🔍 Mis Expedientes Registrados")
+    st.subheader("🔍 Mis Expedientes Registrados y Estado Procesal")
     
     usuario_actual = st.session_state['usuario_logueado']
     if not usuario_actual or usuario_actual['rol'] != 'ciudadano':
@@ -417,7 +417,8 @@ with menu[1]:
             cursor = conn.cursor(dictionary=True)
             query = """
                 SELECT e.id, e.numero_expediente, e.materia, e.sintesis_hechos, e.pretension, e.estado_caso, e.fecha_ingreso,
-                       CONCAT(p1.nombres, ' ', p1.apellidos) as solicitante, p1.cedula, p1.telefono as tel_sol, p1.direccion_habitacion as dir_sol,
+                       COALESCE(e.fecha_actualizacion_estatus, 'Pendiente de actualización') as fecha_actualizacion_estatus,
+                       CONCAT(p1.nombres, ' ', p1.apellidos) as solicitante, p1.cedula as ced_sol, p1.telefono as tel_sol, p1.direccion_habitacion as dir_sol,
                        CONCAT(p2.nombres, ' ', p2.apellidos) as requerido, p2.direccion_habitacion as dir_req
                 FROM expedientes e
                 JOIN personas p1 ON e.solicitante_id = p1.id
@@ -431,21 +432,48 @@ with menu[1]:
             
             if casos:
                 st.success(f"Mostrando expedientes asociados a la Cédula: **{cedula_usuario}**")
+                
+                # Mapa de avance por etapas
+                ETAPAS_PROCESO = {
+                    "Pendiente": (1, "📥 1. Solicitud Recibida / En Revisión Inicial"),
+                    "Citado": (2, "📜 2. Boleta de Citación Emitida / Notificación"),
+                    "En Mediación": (3, "🤝 3. Audiencia de Conciliación y Mediación"),
+                    "Conciliado": (4, "✅ 4. Proceso Concluido / Acuerdo Conciliatorio"),
+                    "Remitido": (4, "🏛️ 4. Causa Remitida a la Jurisdicción Ordinaria")
+                }
+
                 for caso in casos:
-                    with st.expander(f"📌 Expediente: {caso['numero_expediente']} | Estado: {caso['estado_caso']}"):
-                        st.write(f"**Materia:** {caso['materia']}")
-                        st.write(f"**Requerido:** {caso['requerido']}")
-                        st.write(f"**Fecha de Ingreso:** {caso['fecha_ingreso']}")
-                        st.write(f"**Hechos:** {caso['sintesis_hechos']}")
-                        st.write(f"**Pretensión:** {caso['pretension']}")
+                    estado_actual = caso['estado_caso'] or 'Pendiente'
+                    paso_num, etapa_txt = ETAPAS_PROCESO.get(estado_actual, (1, f"Fase: {estado_actual}"))
+                    
+                    with st.expander(f"📌 Expediente: {caso['numero_expediente']} | Estatus: {estado_actual}"):
+                        st.markdown(f"#### 🚩 Etapa Actual del Proceso:")
+                        st.info(f"**{etapa_txt}**")
                         
+                        # Barra de progreso visual según la etapa
+                        progreso_pct = int((paso_num / 4) * 100)
+                        st.progress(progreso_pct)
+                        st.caption(f"Progreso del trámite: {progreso_pct}% de sustanciación.")
+                        
+                        st.markdown("---")
+                        col_c1, col_c2 = st.columns(2)
+                        with col_c1:
+                            st.write(f"**Materia del Conflicto:** {caso['materia']}")
+                            st.write(f"**Parte Requerida (Citado):** {caso['requerido']}")
+                            st.write(f"**Fecha de Recepción:** {caso['fecha_ingreso']}")
+                        with col_c2:
+                            st.write(f"**Síntesis de Hechos:** {caso['sintesis_hechos']}")
+                            st.write(f"**Pretensión:** {caso['pretension']}")
+                            st.write(f"**Última Actualización del Despacho:** {caso['fecha_actualizacion_estatus']}")
+                        
+                        st.markdown("---")
                         pdf_data = generar_pdf_auto_inicio(
-                            caso['numero_expediente'], caso['solicitante'], caso['cedula'],
+                            caso['numero_expediente'], caso['solicitante'], caso['ced_sol'],
                             caso['tel_sol'], caso['dir_sol'], caso['requerido'],
                             caso['dir_req'], caso['materia'], caso['sintesis_hechos'], caso['pretension']
                         )
                         st.download_button(
-                            label="📄 Descargar Auto de Inicio",
+                            label="📄 Descargar Auto de Inicio (PDF Oficial)",
                             data=pdf_data,
                             file_name=f"Auto_Inicio_{caso['numero_expediente']}.pdf",
                             mime="application/pdf",
@@ -456,150 +484,154 @@ with menu[1]:
         except Exception as e:
             st.error(f"Error consultando la base de datos: {e}")
 
-# TAB 3: MÓDULO DEL JUEZ DE PAZ / GESTIÓN DE EXPEDIENTES
+# TAB 3: MÓDULO DEL JUEZ DE PAZ (ACCESO RESTRINGIDO POR ROL)
 with menu[2]:
     st.subheader("⚖️ Módulo de Gestión y Decisión del Juez de Paz Comunal")
-    st.info("Visualización integral de expedientes, registro de actuaciones y actualización de estatus con marca de tiempo oficial.")
     
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
-        # Consulta robusta con JOIN para traer todos los datos reales de las partes y el expediente
-        query = """
-            SELECT e.id, e.numero_expediente, e.materia, e.sintesis_hechos, e.pretension, e.estado_caso, e.fecha_ingreso,
-                   COALESCE(e.fecha_actualizacion_estatus, 'Pendiente de actualización') as fecha_actualizacion_estatus,
-                   CONCAT(p1.nombres, ' ', p1.apellidos) as solicitante, p1.cedula as ced_sol, p1.telefono as tel_sol, p1.direccion_habitacion as dir_sol,
-                   CONCAT(p2.nombres, ' ', p2.apellidos) as requerido, p2.direccion_habitacion as dir_req
-            FROM expedientes e
-            LEFT JOIN personas p1 ON e.solicitante_id = p1.id
-            LEFT JOIN personas p2 ON e.requerido_id = p2.id
-            ORDER BY e.id DESC
-        """
-        cursor.execute(query)
-        expedientes = cursor.fetchall()
-        conn.close()
-    except Exception as e:
-        st.error(f"Error al conectar con la base de datos para cargar expedientes: {e}")
-        expedientes = []
-        
-    if not expedientes:
-        st.warning("No hay expedientes registrados en el sistema actualmente.")
+    usuario_actual = st.session_state['usuario_logueado']
+    
+    # CONTROL DE ACCESO EXCLUSIVO
+    if not usuario_actual or usuario_actual.get('rol') != 'juez':
+        st.error("⛔ Acceso Restringido: Este módulo es de uso exclusivo para el Juez de Paz Comunal y personal autorizado del Despacho.")
+        st.info("Por favor, inicie sesión en el panel lateral con su usuario y contraseña administrativa de Juez de Paz.")
     else:
-        st.write(f"Total de expedientes en el sistema: **{len(expedientes)}**")
+        st.info(f"Bienvenido Juez(a) **{usuario_actual['nombre_completo']}**. Visualización integral de expedientes y sustanciación de causas.")
         
-        # Filtro rápido por estatus
-        filtro_estado = st.selectbox("Filtrar expedientes por estatus:", ["Todos", "Pendiente", "En Mediación", "Conciliado", "Remitido", "Citado"])
-        
-        for exp in expedientes:
-            # Extracción segura y mapeo de datos reales
-            exp_id = exp.get('id') or 'S/N'
-            num_exp = exp.get('numero_expediente') or f"JPC-{exp_id}"
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor(dictionary=True)
+            query = """
+                SELECT e.id, e.numero_expediente, e.materia, e.sintesis_hechos, e.pretension, e.estado_caso, e.fecha_ingreso,
+                       COALESCE(e.fecha_actualizacion_estatus, 'Pendiente de actualización') as fecha_actualizacion_estatus,
+                       CONCAT(p1.nombres, ' ', p1.apellidos) as solicitante, p1.cedula as ced_sol, p1.telefono as tel_sol, p1.direccion_habitacion as dir_sol,
+                       CONCAT(p2.nombres, ' ', p2.apellidos) as requerido, p2.direccion_habitacion as dir_req
+                FROM expedientes e
+                LEFT JOIN personas p1 ON e.solicitante_id = p1.id
+                LEFT JOIN personas p2 ON e.requerido_id = p2.id
+                ORDER BY e.id DESC
+            """
+            cursor.execute(query)
+            expedientes = cursor.fetchall()
+            conn.close()
+        except Exception as e:
+            st.error(f"Error al conectar con la base de datos para cargar expedientes: {e}")
+            expedientes = []
             
-            solicitante = exp.get('solicitante') or 'No especificado'
-            ced_sol = exp.get('ced_sol') or 'S/N'
-            tel_sol = exp.get('tel_sol') or 'No registrado'
-            dir_sol = exp.get('dir_sol') or 'No especificada'
+        if not expedientes:
+            st.warning("No hay expedientes registrados en el sistema actualmente.")
+        else:
+            st.write(f"Total de expedientes en el sistema: **{len(expedientes)}**")
             
-            requerido = exp.get('requerido') or 'No especificado'
-            dir_req = exp.get('dir_req') or 'No especificada'
+            filtro_estado = st.selectbox("Filtrar expedientes por estatus:", ["Todos", "Pendiente", "En Mediación", "Conciliado", "Remitido", "Citado"])
             
-            estado = exp.get('estado_caso') or 'Pendiente'
-            motivo = exp.get('sintesis_hechos') or 'Sin motivo registrado'
-            pretension = exp.get('pretension') or 'No especificada'
-            materia = exp.get('materia') or 'Convivencia Comunitaria'
-            fecha_creacion = exp.get('fecha_ingreso') or 'No registrada'
-            fecha_act = exp.get('fecha_actualizacion_estatus') or 'Pendiente de actualización'
-            
-            if filtro_estado != "Todos" and estado != filtro_estado:
-                continue
+            for exp in expedientes:
+                exp_id = exp.get('id') or 'S/N'
+                num_exp = exp.get('numero_expediente') or f"JPC-{exp_id}"
                 
-            # Color distintivo según el estatus
-            badge_color = "orange" if estado == "Pendiente" else "blue" if estado in ["En Mediación", "Citado"] else "green"
-            
-            with st.expander(f"📁 Expediente {num_exp} - Solicitante: {solicitante} vs {requerido} [{estado}]"):
-                col_info1, col_info2 = st.columns(2)
+                solicitante = exp.get('solicitante') or 'No especificado'
+                ced_sol = exp.get('ced_sol') or 'S/N'
+                tel_sol = exp.get('tel_sol') or 'No registrado'
+                dir_sol = exp.get('dir_sol') or 'No especificada'
                 
-                with col_info1:
-                    st.markdown(f"**Materia del Conflicto:** {materia}")
-                    st.markdown(f"**Motivo / Hechos:** {motivo}")
-                    st.markdown(f"**Pretensión / Arreglo:** {pretension}")
-                    st.markdown(f"**Fecha de Recepción:** {fecha_creacion}")
+                requerido = exp.get('requerido') or 'No especificado'
+                dir_req = exp.get('dir_req') or 'No especificada'
+                
+                estado = exp.get('estado_caso') or 'Pendiente'
+                motivo = exp.get('sintesis_hechos') or 'Sin motivo registrado'
+                pretension = exp.get('pretension') or 'No especificada'
+                materia = exp.get('materia') or 'Convivencia Comunitaria'
+                fecha_creacion = exp.get('fecha_ingreso') or 'No registrada'
+                fecha_act = exp.get('fecha_actualizacion_estatus') or 'Pendiente de actualización'
+                
+                if filtro_estado != "Todos" and estado != filtro_estado:
+                    continue
                     
-                with col_info2:
-                    st.markdown(f"**Parte Solicitante:** {solicitante} (C.I: {ced_sol})")
-                    st.markdown(f"**Teléfono:** {tel_sol}")
-                    st.markdown(f"**Dirección Solicitante:** {dir_sol}")
-                    st.markdown(f"**Parte Requerida (Citado):** {requerido}")
-                    st.markdown(f"**Ubicación Citado:** {dir_req}")
-                    st.markdown(f"**Estatus Actual:** :{badge_color}[{estado}]")
-                    st.markdown(f"**Última Modificación:** {fecha_act}")
+                badge_color = "orange" if estado == "Pendiente" else "blue" if estado in ["En Mediación", "Citado"] else "green"
                 
-                st.markdown("---")
-                st.markdown("#### 🛠️ Acciones del Despacho y Actualización")
-                
-                col_st1, col_st2 = st.columns([2, 1])
-                
-                with col_st1:
-                    opciones_estado = ["Pendiente", "En Mediación", "Citado", "Conciliado", "Remitido"]
-                    idx_actual = opciones_estado.index(estado) if estado in opciones_estado else 0
+                with st.expander(f"📁 Expediente {num_exp} - Solicitante: {solicitante} vs {requerido} [{estado}]"):
+                    col_info1, col_info2 = st.columns(2)
                     
-                    nuevo_estado = st.selectbox(
-                        "Cambiar Estatus del Caso",
-                        opciones_estado,
-                        index=idx_actual,
-                        key=f"sel_st_{exp_id}"
-                    )
-                
-                with col_st2:
-                    st.write("")
-                    st.write("")
-                    if st.button("💾 Guardar Estatus", key=f"btn_st_{exp_id}", use_container_width=True):
-                        try:
-                            conn = get_db_connection()
-                            cursor = conn.cursor()
-                            cursor.execute(
-                                "UPDATE expedientes SET estado_caso = %s, fecha_actualizacion_estatus = NOW() WHERE id = %s",
-                                (nuevo_estado, exp_id)
-                            )
-                            conn.commit()
-                            conn.close()
-                            st.success(f"¡Estatus actualizado a '{nuevo_estado}' con sello de tiempo oficial!")
-                            st.rerun()
-                        except Exception as e:
-                            st.error(f"Error al actualizar el estatus: {e}")
+                    with col_info1:
+                        st.markdown(f"**Materia del Conflicto:** {materia}")
+                        st.markdown(f"**Motivo / Hechos:** {motivo}")
+                        st.markdown(f"**Pretensión / Arreglo:** {pretension}")
+                        st.markdown(f"**Fecha de Recepción:** {fecha_creacion}")
+                        
+                    with col_info2:
+                        st.markdown(f"**Parte Solicitante:** {solicitante} (C.I: {ced_sol})")
+                        st.markdown(f"**Teléfono:** {tel_sol}")
+                        st.markdown(f"**Dirección Solicitante:** {dir_sol}")
+                        st.markdown(f"**Parte Requerida (Citado):** {requerido}")
+                        st.markdown(f"**Ubicación Citado:** {dir_req}")
+                        st.markdown(f"**Estatus Actual:** :{badge_color}[{estado}]")
+                        st.markdown(f"**Última Modificación:** {fecha_act}")
+                    
+                    st.markdown("---")
+                    st.markdown("#### 🛠️ Acciones del Despacho y Actualización")
+                    
+                    col_st1, col_st2 = st.columns([2, 1])
+                    
+                    with col_st1:
+                        opciones_estado = ["Pendiente", "En Mediación", "Citado", "Conciliado", "Remitido"]
+                        idx_actual = opciones_estado.index(estado) if estado in opciones_estado else 0
+                        
+                        nuevo_estado = st.selectbox(
+                            "Cambiar Estatus del Caso",
+                            opciones_estado,
+                            index=idx_actual,
+                            key=f"sel_st_{exp_id}"
+                        )
+                    
+                    with col_st2:
+                        st.write("")
+                        st.write("")
+                        if st.button("💾 Guardar Estatus", key=f"btn_st_{exp_id}", use_container_width=True):
+                            try:
+                                conn = get_db_connection()
+                                cursor = conn.cursor()
+                                cursor.execute(
+                                    "UPDATE expedientes SET estado_caso = %s, fecha_actualizacion_estatus = NOW() WHERE id = %s",
+                                    (nuevo_estado, exp_id)
+                                )
+                                conn.commit()
+                                conn.close()
+                                st.success(f"¡Estatus actualizado a '{nuevo_estado}' con sello de tiempo oficial!")
+                                st.rerun()
+                            except Exception as e:
+                                st.error(f"Error al actualizar el estatus: {e}")
 
-                st.markdown("---")
-                st.markdown("#### 📄 Generación y Descarga de Documentos (PDF Oficial)")
-                
-                col_doc1, col_doc2, col_doc3 = st.columns(3)
-                
-                with col_doc1:
-                    pdf_auto = generar_pdf_auto_inicio(
-                        num_exp, solicitante, ced_sol, tel_sol, dir_sol,
-                        requerido, dir_req, materia, motivo, pretension
-                    )
-                    st.download_button(
-                        label="📄 Descargar Auto de Inicio",
-                        data=pdf_auto,
-                        file_name=f"Auto_Inicio_{num_exp}.pdf",
-                        mime="application/pdf",
-                        key=f"dl_inicio_{exp_id}"
-                    )
+                    st.markdown("---")
+                    st.markdown("#### 📄 Generación y Descarga de Documentos (PDF Oficial)")
                     
-                with col_doc2:
-                    pdf_cit = generar_boleta_citacion(
-                        num_exp, requerido, dir_req, solicitante
-                    )
-                    st.download_button(
-                        label="📄 Descargar Boleta Citación",
-                        data=pdf_cit,
-                        file_name=f"Boleta_Citacion_{num_exp}.pdf",
-                        mime="application/pdf",
-                        key=f"dl_citacion_{exp_id}"
-                    )
+                    col_doc1, col_doc2, col_doc3 = st.columns(3)
                     
-                with col_doc3:
-                    st.info(f"Estatus actual: {estado}")
+                    with col_doc1:
+                        pdf_auto = generar_pdf_auto_inicio(
+                            num_exp, solicitante, ced_sol, tel_sol, dir_sol,
+                            requerido, dir_req, materia, motivo, pretension
+                        )
+                        st.download_button(
+                            label="📄 Descargar Auto de Inicio",
+                            data=pdf_auto,
+                            file_name=f"Auto_Inicio_{num_exp}.pdf",
+                            mime="application/pdf",
+                            key=f"dl_inicio_{exp_id}"
+                        )
+                        
+                    with col_doc2:
+                        pdf_cit = generar_boleta_citacion(
+                            num_exp, requerido, dir_req, solicitante
+                        )
+                        st.download_button(
+                            label="📄 Descargar Boleta Citación",
+                            data=pdf_cit,
+                            file_name=f"Boleta_Citacion_{num_exp}.pdf",
+                            mime="application/pdf",
+                            key=f"dl_citacion_{exp_id}"
+                        )
+                        
+                    with col_doc3:
+                        st.info(f"Estatus actual: {estado}")
 # TAB 4: MARCO LEGAL Y COMPETENCIAS
 with menu[3]:
     st.subheader("📚 Marco Legal, Institucional y Competencias")
